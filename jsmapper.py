@@ -1,10 +1,8 @@
-#!/usr/bin/env python3
-
 import os
 import json
 import argparse
 import requests
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 
 class SourceMapTool:
@@ -14,9 +12,12 @@ class SourceMapTool:
         self.local = local
         self.detect = detect
         self.ssl_verify = ssl_verify
+        self._create_output_directory()
 
+    def _create_output_directory(self):
         if not os.path.exists(self.output_dir):
-            os.makedirs(self.output_dir)
+            print(f"Creating output directory: {self.output_dir}")
+            os.makedirs(self.output_dir, exist_ok=True)
 
     def run(self):
         if self.local:
@@ -36,8 +37,8 @@ class SourceMapTool:
     def _detect_and_extract_from_html(self):
         html_data = self._get_remote_data(self.target)
         soup = BeautifulSoup(html_data, "html.parser")
-
         scripts = soup.find_all("script", src=True)
+
         for script in scripts:
             script_url = urljoin(self.target, script['src'])
             print(f"Checking JS file: {script_url}")
@@ -100,8 +101,8 @@ def main():
     parser = argparse.ArgumentParser(description="Extract source code from Webpack source maps.")
     parser.add_argument("target", help="The target URL or local file.")
     parser.add_argument("output_dir", help="Directory to save extracted files.")
-    parser.add_argument("--local", action="store_true", help="Indicates that the target is a local file.")
-    parser.add_argument("--detect", action="store_true", help="Detect and extract sourcemaps from HTML.")
+    parser.add_argument("--local", action="store_true", help="Use a local source map file.")
+    parser.add_argument("--detect", action="store_true", help="Detect sourcemaps from HTML.")
     parser.add_argument("--no-ssl-verify", action="store_true", help="Disable SSL verification.")
 
     args = parser.parse_args()
